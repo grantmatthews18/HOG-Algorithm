@@ -10,7 +10,28 @@ def get_differential_filter():
 
 
 def filter_image(im, filter):
-    # To do
+
+    shape = im.shape
+    x_pixels = shape[0]
+    y_pixels = shape[1]
+
+    im_filtered = np.zeros(x_pixels, y_pixels)
+
+    for y in range(y_pixels):
+        for x in range(x_pixels):
+            if(x == 0 or x == (x_pixels-1) or y == 0 or y == (y_pixels-1)):
+                #do something for edge cases (later)
+            else:
+                total = 0
+                num_multiples = 0
+                for i_y in range(3):
+                    for i_x in range(3):
+                        total += im[i_x-1, i_y-1] * filter[i_x,i_y]
+                        num_multiples += filter[i_x,i_y]
+
+                total = total/num_multiples
+                im_filtered[x,y] = total
+
     return im_filtered
 
 
