@@ -38,6 +38,7 @@ def filter_image(im, filter):
 def get_gradient(im_dx, im_dy):
 
     if not (im_dx.shape == im_dy.shape):
+        #I would throw an exception here and terminate but I dont want to import additional packages
         print("Error, mismatch image sizes")
 
     shape = im_dx.shape
@@ -56,7 +57,46 @@ def get_gradient(im_dx, im_dy):
 
 
 def build_histogram(grad_mag, grad_angle, cell_size):
-    # To do
+
+    if not (grad_mag.shape == grad_angle.shape):
+        #I would throw an exception here and terminate but I dont want to import additional packages
+        print("Error, mismatch image sizes")
+
+    shape = grad_mag.shape
+    x_pixels = shape[0]
+    y_pixels = shape[1]
+
+    num_cells_x = x_pixels/cell_size
+    num_cells_y = y_pixels/cell_size
+
+    ori_histo = np.zeros(num_cells_x,num_cells_y,6)
+
+    #for each cell build bins
+    for y_cell_ct in range(num_cells_y):
+        for x_cell_ct in range(num_cells_x):
+            #for each pixel in each cell:
+            for y in range(cell_size):
+                for x in range(cell_size):
+
+                    real_x = x + (x_cell_ct*cell_size)
+                    real_y = y + (y_cell_ct*cell_size)
+
+                    pixel_grad = grad_mag[real_x][real_y]
+                    pixel_angle = grad_angle[real_x][real_y]
+
+                    if(pixel_angle < 30):
+                        ori_histo[x_cell_ct][y_cell_ct][0] += pixel_grad
+                    elif(pixel_angle < 60):
+                        ori_histo[x_cell_ct][y_cell_ct][1] += pixel_grad
+                    elif(pixel_angle < 90):
+                        ori_histo[x_cell_ct][y_cell_ct][2] += pixel_grad
+                    elif(pixel_angle < 120):
+                        ori_histo[x_cell_ct][y_cell_ct][3] += pixel_grad
+                    elif(pixel_angle < 150):
+                        ori_histo[x_cell_ct][y_cell_ct][4] += pixel_grad
+                    else:
+                        ori_histo[x_cell_ct][y_cell_ct][5] += pixel_grad
+
     return ori_histo
 
 
