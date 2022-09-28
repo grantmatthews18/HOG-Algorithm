@@ -36,7 +36,22 @@ def filter_image(im, filter):
 
 
 def get_gradient(im_dx, im_dy):
-    # To do
+
+    if not (im_dx.shape == im_dy.shape):
+        print("Error, mismatch image sizes")
+
+    shape = im_dx.shape
+    x_pixels = shape[0]
+    y_pixels = shape[1]
+
+    grad_mag = np.zeros(x_pixels, y_pixels)
+    grad_angle = np.zeros(x_pixels, y_pixels)
+
+    for y in range(y_pixels):
+        for x in range(x_pixels):
+            grad_mag[x,y] = sqrt(pow(im_dx[x,y], 2) + pow(im_dy[x,y], 2))
+            grad_angle[x,y] = np.arctan(im_dy[x,y], im_dx[x,y])
+
     return grad_mag, grad_angle
 
 
