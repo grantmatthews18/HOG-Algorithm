@@ -219,6 +219,11 @@ def face_recognition(I_target, I_template):
     hog_target = get_block_descriptor(ori_histo_target, 2)
     hog_template = get_block_descriptor(ori_histo_template, 2)
 
+    print(hog_template.shape)
+
+    #for y_feat in range()
+
+    bounding_boxes = np.array([[0,0,1]])
     return  bounding_boxes
 
 
@@ -276,5 +281,5 @@ if __name__=='__main__':
 
     I_target_c= cv2.imread('target.png')
     # MxN image (just for visualization)
-    visualize_face_detection(I_target_c, bounding_boxes, template.shape[0])
+    visualize_face_detection(I_target_c, bounding_boxes, I_template.shape[0])
     #this is visualization code.
