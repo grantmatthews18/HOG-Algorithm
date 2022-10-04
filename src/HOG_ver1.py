@@ -282,9 +282,8 @@ def face_recognition(I_target, I_template):
     all_bounding_boxes_list = []
     max_s = 0
 
-    
+
     for y in range(target_pixels_y-template_pixels_y):
-        print(y)
         for x in range(target_pixels_x-template_pixels_x):
             im_test = I_target[y:(y+template_pixels_y), x:(x+template_pixels_x)]
 
@@ -300,8 +299,6 @@ def face_recognition(I_target, I_template):
 
     bounding_boxes_list = []
 
-    print(len(all_bounding_boxes_list))
-
     while not len(all_bounding_boxes_list) == 0:
         max_s = 0
         max_box = 0
@@ -316,13 +313,11 @@ def face_recognition(I_target, I_template):
 
         new_all_bounding_boxes_list = []
         for box in all_bounding_boxes_list:
-            print(calc_iou([box[0], box[1]], [curr_box[0], curr_box[1]], template_pixels_x, template_pixels_y))
             if(0.5 > calc_iou([box[0], box[1]], [curr_box[0], curr_box[1]], template_pixels_x, template_pixels_y)):
                 new_all_bounding_boxes_list.append(box)
 
         all_bounding_boxes_list = new_all_bounding_boxes_list
 
-        print(len(all_bounding_boxes_list))
 
     bounding_boxes = np.array(bounding_boxes_list)
     return  bounding_boxes
