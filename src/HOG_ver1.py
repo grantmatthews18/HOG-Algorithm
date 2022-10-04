@@ -244,6 +244,21 @@ def vector_norm(v):
 
     return(new_v)
 
+def calc_iou(coor_1, coor_2, size_x, size_y):
+    box_area = size_x * size_y
+
+    iou_x_tl = max(coor_1[0], coor_2[0])
+    iou_y_tl = max(coor_1[1], coor_2[1])
+    iou_x_br = min(coor_1[0]+size_x, coor_2[0]+size_x)
+    iou_y_br = min(coor_1[1]+size_y, coor_2[1]+size_y)
+
+    iou_area = (iou_x_br-iou_x_tl) * (iou_y_br-iou_y_tl)
+
+    union_area = box_area*2 - iou_area
+
+    return(iou_area/union_area)
+
+
 def face_recognition(I_target, I_template):
 
     # convert grey-scale image to double format
@@ -251,8 +266,8 @@ def face_recognition(I_target, I_template):
     I_template = I_template.astype('float') / 255.0
 
     #get image sizes
-    template_pixels_x, template_pixels_y = I_template.shape
-    target_pixels_x, target_pixels_y = I_target.shape
+    template_pixels_y, template_pixels_x = I_template.shape
+    target_pixels_y, target_pixels_x = I_target.shape
 
     #5x5 of descriptors
     template_hog = extract_hog_no_vis(I_template)
@@ -264,13 +279,14 @@ def face_recognition(I_target, I_template):
     template_mean_norm = vector_mean(template_vector_norm)
 
     #array to hold bounding boxes
-    bounding_boxes_list = []
+    all_bounding_boxes_list = []
     max_s = 0
 
+    
     for y in range(target_pixels_y-template_pixels_y):
         print(y)
         for x in range(target_pixels_x-template_pixels_x):
-            im_test = I_target[x:(x+template_pixels_x), y:(y+template_pixels_y)]
+            im_test = I_target[y:(y+template_pixels_y), x:(x+template_pixels_x)]
 
             test_hog = extract_hog_no_vis(im_test)
             test_vector = merge_vectors_from_hog(test_hog)
@@ -280,9 +296,34 @@ def face_recognition(I_target, I_template):
             s = (np.dot(template_vector_norm, test_vector_norm)) / (template_mean_norm * test_mean_norm)
 
             if(s >= 0.3):
-                bounding_boxes_list.append([y,x,s])
+                all_bounding_boxes_list.append([x,y,s])
 
-    print(bounding_boxes_list)
+    bounding_boxes_list = []
+
+    print(len(all_bounding_boxes_list))
+
+    while not len(all_bounding_boxes_list) == 0:
+        max_s = 0
+        max_box = 0
+        for i in range(len(all_bounding_boxes_list)):
+            if all_bounding_boxes_list[i][2] > max_s:
+                max_s = all_bounding_boxes_list[i][2]
+                max_box = i
+
+        bounding_boxes_list.append(all_bounding_boxes_list[max_box])
+        curr_box = all_bounding_boxes_list[max_box]
+        del all_bounding_boxes_list[max_box]
+
+        new_all_bounding_boxes_list = []
+        for box in all_bounding_boxes_list:
+            print(calc_iou([box[0], box[1]], [curr_box[0], curr_box[1]], template_pixels_x, template_pixels_y))
+            if(0.5 > calc_iou([box[0], box[1]], [curr_box[0], curr_box[1]], template_pixels_x, template_pixels_y)):
+                new_all_bounding_boxes_list.append(box)
+
+        all_bounding_boxes_list = new_all_bounding_boxes_list
+
+        print(len(all_bounding_boxes_list))
+
     bounding_boxes = np.array(bounding_boxes_list)
     return  bounding_boxes
 
