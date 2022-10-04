@@ -103,19 +103,6 @@ def build_histogram(grad_mag, grad_angle, cell_size):
                     pixel_grad = grad_mag[real_x][real_y]
                     pixel_angle = grad_angle[real_x][real_y]
 
-                    # if(pixel_angle < 30):
-                    #     ori_histo[x_cell_ct][y_cell_ct][0] += pixel_grad
-                    # elif(pixel_angle < 60):
-                    #     ori_histo[x_cell_ct][y_cell_ct][1] += pixel_grad
-                    # elif(pixel_angle < 90):
-                    #     ori_histo[x_cell_ct][y_cell_ct][2] += pixel_grad
-                    # elif(pixel_angle < 120):
-                    #     ori_histo[x_cell_ct][y_cell_ct][3] += pixel_grad
-                    # elif(pixel_angle < 150):
-                    #     ori_histo[x_cell_ct][y_cell_ct][4] += pixel_grad
-                    # else:
-                    #     ori_histo[x_cell_ct][y_cell_ct][5] += pixel_grad
-
                     if(pixel_angle < 15):
                         ori_histo[x_cell_ct][y_cell_ct][0] += pixel_grad
                     elif(pixel_angle < 45):
@@ -147,13 +134,13 @@ def get_block_descriptor(ori_histo, block_size):
     for y in range(num_cells_y-1):
         for x in range(num_cells_x-1):
 
-            #ori_histo_normalized[x][y] = np.concatenate((ori_histo[x][y], ori_histo[x+1][y], ori_histo[x][y+1], ori_histo[x+1][y+1]), axis=0)
+            ori_histo_normalized[x][y] = np.concatenate((ori_histo[x][y], ori_histo[x+1][y], ori_histo[x][y+1], ori_histo[x+1][y+1]), axis=0)
 
-            for i in range(6):
-                ori_histo_normalized[x][y][0+(4*i)] = ori_histo[x][y][i]
-                ori_histo_normalized[x][y][1+(4*i)] = ori_histo[x+1][y][i]
-                ori_histo_normalized[x][y][2+(4*i)] = ori_histo[x][y+1][i]
-                ori_histo_normalized[x][y][3+(4*i)] = ori_histo[x+1][y+1][i]
+            # for i in range(6):
+            #     ori_histo_normalized[x][y][0+(4*i)] = ori_histo[x][y][i]
+            #     ori_histo_normalized[x][y][1+(4*i)] = ori_histo[x+1][y][i]
+            #     ori_histo_normalized[x][y][2+(4*i)] = ori_histo[x][y+1][i]
+            #     ori_histo_normalized[x][y][3+(4*i)] = ori_histo[x+1][y+1][i]
 
             #normalizing
             #totaling
@@ -180,12 +167,12 @@ def extract_hog(im):
 
     grad_mag, grad_angle= get_gradient(im_filtered_x, im_filtered_y)
 
-    ori_histo = build_histogram(grad_mag, grad_angle, 4)
+    ori_histo = build_histogram(grad_mag, grad_angle, 8)
 
     hog = get_block_descriptor(ori_histo, 2)
 
     # visualize to verify
-    visualize_hog(im, hog, 4, 2)
+    visualize_hog(im, hog, 8, 2)
 
     return hog
 
@@ -236,14 +223,14 @@ def merge_vectors_from_hog(hog):
                 v.append(hog[x,y,z])
     return(v)
 
-def vector_norm(v):
+def vector_mean(v):
     total = 0
     for i in range(len(v)):
         total += math.pow(v[i], 2)
 
     return(math.sqrt(total))
 
-def vector_norm_each_element(v):
+def vector_norm(v):
     total = 0
     for i in range(len(v)):
         total += v[i]
@@ -253,7 +240,7 @@ def vector_norm_each_element(v):
     new_v = []
 
     for j in range(len(v)):
-        new_v = v[j] - mean
+        new_v.append(v[j] - mean)
 
     return(new_v)
 
@@ -267,52 +254,36 @@ def face_recognition(I_target, I_template):
     template_pixels_x, template_pixels_y = I_template.shape
     target_pixels_x, target_pixels_y = I_target.shape
 
+    #5x5 of descriptors
     template_hog = extract_hog_no_vis(I_template)
 
     template_vector = merge_vectors_from_hog(template_hog)
 
     template_vector_norm = vector_norm(template_vector)
 
-    template_descriptors_norm = vector_norm_each_element(template_vector)
+    template_mean_norm = vector_mean(template_vector_norm)
 
     #array to hold bounding boxes
     bounding_boxes_list = []
+    max_s = 0
 
-    print(target_pixels_x-template_pixels_x,target_pixels_y-template_pixels_y)
     for y in range(target_pixels_y-template_pixels_y):
+        print(y)
         for x in range(target_pixels_x-template_pixels_x):
-            print(x,y)
             im_test = I_target[x:(x+template_pixels_x), y:(y+template_pixels_y)]
 
             test_hog = extract_hog_no_vis(im_test)
             test_vector = merge_vectors_from_hog(test_hog)
             test_vector_norm = vector_norm(test_vector)
-            test_descriptor_norm = vector_norm_each_element(test_vector)
+            test_mean_norm = vector_mean(test_vector_norm)
 
-            s = (np.dot(template_descriptors_norm, test_descriptor_norm)) / (template_vector_norm * test_vector_norm)
-            if(s >= 50):
-                print(s)
+            s = (np.dot(template_vector_norm, test_vector_norm)) / (template_mean_norm * test_mean_norm)
 
+            if(s >= 0.3):
+                bounding_boxes_list.append([y,x,s])
 
-    im_x_target = filter_image(I_target, filter_x)
-    im_y_target = filter_image(I_target, filter_y)
-
-
-
-    grad_mag_target, grad_angle_target= get_gradient(im_x_target, im_y_target)
-
-
-    ori_histo_target = build_histogram(grad_mag_target, grad_angle_target, 8)
-
-
-    hog_target = get_block_descriptor(ori_histo_target, 2)
-
-
-    print(hog_template.shape)
-
-    #for y_feat in range()
-
-    bounding_boxes = np.array([[0,0,1]])
+    print(bounding_boxes_list)
+    bounding_boxes = np.array(bounding_boxes_list)
     return  bounding_boxes
 
 def visualize_face_detection(I_target,bounding_boxes,box_size):
@@ -354,7 +325,7 @@ def visualize_face_detection(I_target,bounding_boxes,box_size):
 
 if __name__=='__main__':
 
-    im = cv2.imread('einstien.jpg', 0)
+    im = cv2.imread('cameraman.tif', 0)
     hog = extract_hog(im)
 
     I_target= cv2.imread('target.png', 0)
