@@ -136,13 +136,6 @@ def get_block_descriptor(ori_histo, block_size):
 
             ori_histo_normalized[x][y] = np.concatenate((ori_histo[x][y], ori_histo[x+1][y], ori_histo[x][y+1], ori_histo[x+1][y+1]), axis=0)
 
-            # for i in range(6):
-            #     ori_histo_normalized[x][y][0+(4*i)] = ori_histo[x][y][i]
-            #     ori_histo_normalized[x][y][1+(4*i)] = ori_histo[x+1][y][i]
-            #     ori_histo_normalized[x][y][2+(4*i)] = ori_histo[x][y+1][i]
-            #     ori_histo_normalized[x][y][3+(4*i)] = ori_histo[x+1][y+1][i]
-
-            #normalizing
             #totaling
             total = 0
             for j in range(24):
